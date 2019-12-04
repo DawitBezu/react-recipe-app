@@ -1,26 +1,74 @@
-import React from 'react';
-import logo from './logo.svg';
+import React, { useEffect, useState } from 'react';
 import './App.css';
+import { makeStyles } from '@material-ui/core/styles';
+import TextField from '@material-ui/core/TextField';
 
-function App() {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
-  );
-}
+import Recipe from './Recipe';
+
+import uuid from 'uuid/v4';
+
+const useStyles = makeStyles(theme => ({
+  root: {
+    '& > *': {
+      margin: theme.spacing(1),
+			width: 400,
+			
+    },
+  },
+}));
+
+
+const App = () => {
+	const APP_ID = '99bdf6cd';
+	const APP_KEY = 'febf9169fdc7df3266eda53bc4a6b66b';
+
+	const [ recipes, setRecipes ] = useState([]);
+	const [ search, setSearch ] = useState('');
+	const [ query, setQuery ] = useState('rice');
+
+	useEffect(
+		() => {
+			getRecipes();
+		},
+		[ query ]
+	);
+
+	const getRecipes = async () => {
+		const response = await fetch(`https://api.edamam.com/search?q=${query}&app_id=${APP_ID}&app_key=${APP_KEY}`);
+		const data = await response.json();
+		setRecipes(data.hits);
+	};
+
+	const updateSearch = (e) => {
+		setSearch(e.target.value);
+	};
+
+	const getSearch = (e) => {
+		e.preventDefault();
+		setQuery(search);
+		setSearch('');
+	};
+
+	const classes = useStyles();
+
+	return (
+		<div className="App">
+			<form onSubmit={getSearch} className={classes.root}>
+				<TextField id="filled-basic" label="Look for Recipies" variant="filled"  className="search-bar" type="text" value={search} onChange={updateSearch} />
+				
+			</form>
+			<div className="recipes">
+				{recipes.map((recipe) => (
+					<Recipe
+						title={recipe.recipe.label}
+						image={recipe.recipe.image}
+						ingredients={recipe.recipe.ingredients}
+						key={uuid()}
+					/>
+				))}
+			</div>
+		</div>
+	);
+};
 
 export default App;
